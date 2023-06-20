@@ -1,0 +1,92 @@
+<script type="text/javascript">
+    RED.nodes.registerType('node-red-lownto',{
+        category: 'Lownto',
+        color: 'rgb(231, 231, 174)',
+        defaults: {
+            name: {value:"Lownto handler"},
+            global_eventlist: {value:"", required:true},
+            frontend_eventlist: {value:"", required:true},
+            adminhtml_eventlist: {value:"", required:true},
+        },
+        inputs:0,
+        outputs:0,
+        icon: "white-globe.svg",
+        label: function() {
+            return this.name||"node-red-lownto";
+        },
+        oneditprepare: function () {
+            let node = this;
+            const supported_observers = {
+                '<option value="adminhtml_customer_save_after">adminhtml_customer_save_after</option>': ['global', 'frontend', 'adminhtml'],
+                '<option value="catalog_category_save_after">catalog_category_save_after</option>':['adminhtml'],
+                '<option value="catalog_product_collection_load_after">catalog_product_collection_load_after</option>':['global', 'frontend', 'adminhtml'],
+                '<option value="catalog_product_import_bunch_save_after">catalog_product_import_bunch_save_after</option>':['adminhtml'],
+                '<option value="catalog_product_load_after">catalog_product_load_after</option>':['global', 'frontend', 'adminhtml'],
+                '<option value="catalog_product_save_after">catalog_product_save_after</option>':['global','adminhtml'],
+                '<option value="checkout_cart_save_after">checkout_cart_save_after</option>':['global', 'frontend', 'adminhtml'],
+                '<option value="cms_page_save_after">cms_page_save_after</option>':['adminhtml'],
+                '<option value="customer_address_save_after">customer_address_save_after</option>':['global', 'frontend', 'adminhtml'],
+                '<option value="customer_save_after_data_object">customer_save_after_data_object</option>':['global', 'frontend', 'adminhtml'],
+                '<option value="sales_order_creditmemo_load_after">sales_order_creditmemo_load_after</option>':['global', 'frontend', 'adminhtml'],
+                '<option value="sales_order_creditmemo_save_after">sales_order_creditmemo_save_after</option>':['global', 'frontend', 'adminhtml'],
+                '<option value="sales_order_invoice_load_after">sales_order_invoice_load_after</option>':['global', 'frontend', 'adminhtml'],
+                '<option value="sales_order_invoice_save_after">sales_order_invoice_save_after</option>':['global', 'frontend', 'adminhtml'],
+                '<option value="sales_order_load_after">sales_order_load_after</option>':['global', 'frontend', 'adminhtml'],
+                '<option value="sales_order_payment_save_after">sales_order_payment_save_after</option>':['global', 'frontend', 'adminhtml'],
+                '<option value="sales_order_save_after">sales_order_save_after</option>':['global', 'frontend', 'adminhtml'],
+                '<option value="sales_order_shipment_load_after">sales_order_shipment_load_after</option>':['global', 'frontend', 'adminhtml'],
+                '<option value="sales_order_shipment_save_after">sales_order_shipment_save_after</option>':['global', 'frontend', 'adminhtml'],
+                '<option value="sales_quote_address_collection_load_after">sales_quote_address_collection_load_after</option>':['global', 'frontend', 'adminhtml'],
+                '<option value="sales_quote_item_save_after">sales_quote_item_save_after</option>':['global', 'frontend', 'adminhtml'],
+                '<option value="sales_quote_save_after">sales_quote_save_after</option>':['global', 'frontend', 'adminhtml']
+            };
+            Object.keys(supported_observers).forEach(function (observerOption){
+                supported_observers[observerOption].forEach( function (area) {
+                    $("#node-input-" + area + "_eventlist").append(observerOption);
+                });
+            });
+            ['global', 'adminhtml', /*'crontab',*/ 'frontend'/*, 'graphql', 'webapi_rest', 'webapi_soap'*/].forEach( function (area) {
+                let areaSelect = $("#node-input-" + area + "_eventlist");
+                areaSelect.val(node[area + "_eventlist"]).change();
+            });
+        },
+        oneditsave: function () {
+            let node = this;
+            ['global', 'adminhtml', /*'crontab',*/ 'frontend'/*, 'graphql', 'webapi_rest', 'webapi_soap'*/].forEach( function (area) {
+                node[area + "_eventlist"] = $("#node-input-" + area + "_eventlist").val();
+            });
+        },
+        oneditcancel: function () {
+            let node = this;
+            ['global', 'adminhtml', /*'crontab',*/ 'frontend'/*, 'graphql', 'webapi_rest', 'webapi_soap'*/].forEach( function (area) {
+                node[area + "_eventlist"] = $("#node-input-" + area + "_eventlist").val();
+            });
+        }
+    });
+</script>
+
+<script type="text/html" data-template-name="node-red-lownto">
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+    <div class="form-row">
+        <label for="node-input-global_eventlist"><i class="fa fa-tag"></i>Global Events</label>
+        <select name="global_eventlist" id="node-input-global_eventlist" multiple style="width: 70%;">
+        </select>
+    </div>
+    <div class="form-row">
+        <label for="node-input-frontend_eventlist"><i class="fa fa-tag"></i>Frontend Events</label>
+        <select name="frontend_eventlist" id="node-input-frontend_eventlist" multiple style="width: 70%;">
+        </select>
+    </div>
+    <div class="form-row">
+        <label for="node-input-adminhtml_eventlist"><i class="fa fa-tag"></i>Admin Events</label>
+        <select name="adminhtml_eventlist" id="node-input-adminhtml_eventlist" multiple style="width: 70%;">
+        </select>
+    </div>
+</script>
+
+<script type="text/html" data-help-name="node-red-lownto">
+    <p>A node which generates the configuration required for Lownto</p>
+</script>
