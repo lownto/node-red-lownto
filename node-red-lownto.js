@@ -49,10 +49,10 @@ module.exports = function (RED) {
             xml.att('xmlns:xsi', 'http://www.w3.org/2001/XMLSchema-instance');
             xml.att('xsi:noNamespaceSchemaLocation', 'urn:magento:framework:Module/etc/module.xsd');
             xml.ele('module')
-                .att('name', 'Cmtickle_EventThingDynamicConfiguration')
+                .att('name', 'Lownto_DynamicConfiguration')
                 .ele('sequence')
                 .ele('module')
-                .att('name', 'Cmtickle_EventThingRemoteConfig')
+                .att('name', 'Lownto_RemoteConfig')
                 .up()
                 .up()
                 .up();
