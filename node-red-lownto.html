@@ -7,6 +7,7 @@
             global_eventlist: {value:"", required:true},
             frontend_eventlist: {value:"", required:true},
             adminhtml_eventlist: {value:"", required:true},
+            plugins: {value:"", required:true}
         },
         inputs:0,
         outputs:0,
@@ -49,6 +50,10 @@
                 let areaSelect = $("#node-input-" + area + "_eventlist");
                 areaSelect.val(node[area + "_eventlist"]).change();
             });
+            $("#node-input-plugins").typedInput({
+                type:"json",
+                types:["json"]
+            });
         },
         oneditsave: function () {
             let node = this;
@@ -84,6 +89,10 @@
         <label for="node-input-adminhtml_eventlist"><i class="fa fa-tag"></i>Admin Events</label>
         <select name="adminhtml_eventlist" id="node-input-adminhtml_eventlist" multiple style="width: 70%;">
         </select>
+    </div>
+    <div class="form-row">
+        <label for="node-input-plugins"><i class="fa fa-tag"></i>Plugins</label>
+        <input type="text" id="node-input-plugins">
     </div>
 </script>
 
