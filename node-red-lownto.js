@@ -104,40 +104,39 @@ module.exports = function (RED) {
 
         function generateDiXmlResponse(area) {
             let plugins = JSON.parse(config.plugins);
-            
+            if (!plugins.hasOwnProperty(area)) {
+                return'';
+            }
 
             let xml = xmlbuilder.create('config');
             xml.att('xmlns:xsi', 'http://www.w3.org/2001/XMLSchema-instance');
             xml.att('xsi:noNamespaceSchemaLocation', 'urn:magento:framework:ObjectManager/etc/config.xsd');
             xml.com(' Copyright © Colin Tickle <colin.tickle@gmail.com>, all rights reserved.');
-            if (plugins.hasOwnProperty(area)) {
-                for (const magentoClass of Object.getOwnPropertyNames(plugins[area])) {
-                    let classParts = magentoClass.split('\\');
-                    classParts[0] = "Lownto";
-                    classParts[2] = "Plugin";
-                    let pluginClass = classParts.join('\\');
-                    var VirtualTypeArguments = xml.ele('virtualType', { name: pluginClass, type: plugins[area][magentoClass]["class"] })
-                        .ele('arguments')
-                        .ele('argument', { name: 'pluggedInClass', 'xsi:type': 'string' })
-                        .text(magentoClass)
-                        .up();
-                    VirtualTypeArguments = VirtualTypeArguments
-                        .ele('argument', { name: 'functions', 'xsi:type': 'array' });
-                    for (const pluginType of Object.getOwnPropertyNames(plugins[area][magentoClass])) {
-                        if (!supportedPluginTypes.includes(pluginType)) {
-                            continue;
-                        }
-                        let pluginTypeFunctions = VirtualTypeArguments.ele('item', { name: pluginType, 'xsi:type': 'array' });
-                        let pluginFunctionIndex = 0;
-                        for (const pluginFunction of plugins[area][magentoClass][pluginType]) {
-                            pluginFunctionIndex++;
-                            pluginTypeFunctions.ele('item', { name: pluginFunctionIndex, 'xsi:type': 'string' })
-                            .text(pluginFunction);
-                        }
+
+            for (const virtualType of Object.getOwnPropertyNames(plugins[area])) {
+                let pluggedInClass = plugins[area][virtualType]["pluggedInClass"];
+                let pluginClass = plugins[area][virtualType]["pluginClass"]
+                let pluginSortOrder = plugins[area][virtualType]["sortOrder"] ?? '';
+                let VirtualTypeArguments = xml.ele('virtualType', { name: virtualType, type: pluginClass })
+                    .ele('arguments')
+                    .ele('argument', { name: 'pluggedInClass', 'xsi:type': 'string' })
+                    .text(pluggedInClass)
+                    .up()
+                    .ele('argument', { name: 'functions', 'xsi:type': 'array' });
+                for (const pluginType of Object.getOwnPropertyNames(plugins[area][virtualType])) {
+                    if (!supportedPluginTypes.includes(pluginType)) {
+                        continue;
                     }
-                    xml.ele('type', { name: magentoClass})
-                        .ele('plugin', { name: pluginClass.replace(/\\/g, '_'), type:pluginClass});
+                    let pluginTypeFunctions = VirtualTypeArguments.ele('item', { name: pluginType, 'xsi:type': 'array' });
+                    let pluginFunctionIndex = 0;
+                    for (const pluginFunction of plugins[area][virtualType][pluginType]) {
+                        pluginFunctionIndex++;
+                        pluginTypeFunctions.ele('item', { name: pluginFunctionIndex, 'xsi:type': 'string' })
+                        .text(pluginFunction);
+                    }
                 }
+                xml.ele('type', { name: pluggedInClass })
+                    .ele('plugin', { name: virtualType.replace(/\\/g, '_'), type: virtualType, sortOrder: pluginSortOrder });
             }
 
             return xml.toString({ pretty: true });
