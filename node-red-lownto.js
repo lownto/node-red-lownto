@@ -102,42 +102,53 @@ module.exports = function (RED) {
             return xml.toString({ pretty: true });
         }
 
-        function generateDiXmlResponse(area) {
+        function generateDiXmlResponse(diArea) {
             let plugins = JSON.parse(config.plugins);
-            if (!plugins.hasOwnProperty(area)) {
-                return'';
-            }
+
 
             let xml = xmlbuilder.create('config');
             xml.att('xmlns:xsi', 'http://www.w3.org/2001/XMLSchema-instance');
             xml.att('xsi:noNamespaceSchemaLocation', 'urn:magento:framework:ObjectManager/etc/config.xsd');
             xml.com(' Copyright © Colin Tickle <colin.tickle@gmail.com>, all rights reserved.');
 
-            for (const virtualType of Object.getOwnPropertyNames(plugins[area])) {
-                let pluggedInClass = plugins[area][virtualType]["pluggedInClass"];
-                let pluginClass = plugins[area][virtualType]["pluginClass"]
-                let pluginSortOrder = plugins[area][virtualType]["sortOrder"] ?? '';
-                let VirtualTypeArguments = xml.ele('virtualType', { name: virtualType, type: pluginClass })
-                    .ele('arguments')
-                    .ele('argument', { name: 'pluggedInClass', 'xsi:type': 'string' })
-                    .text(pluggedInClass)
-                    .up()
-                    .ele('argument', { name: 'functions', 'xsi:type': 'array' });
-                for (const pluginType of Object.getOwnPropertyNames(plugins[area][virtualType])) {
-                    if (!supportedPluginTypes.includes(pluginType)) {
-                        continue;
+            supportedAreas.forEach(function(area) { 
+                if (!plugins.hasOwnProperty(area)) {
+                    return;
+                }
+                for (const virtualType of Object.getOwnPropertyNames(plugins[area])) {
+                    let pluggedInClass = plugins[area][virtualType]["pluggedInClass"];
+                    let pluginClass = plugins[area][virtualType]["pluginClass"]
+                    let pluginSortOrder = plugins[area][virtualType]["sortOrder"] ?? '';
+                    // Plugins always in global di.xml
+                    if (diArea == 'global') {
+                        let VirtualTypeArguments = xml.ele('virtualType', { name: virtualType, type: pluginClass })
+                            .ele('arguments')
+                            .ele('argument', { name: 'pluggedInClass', 'xsi:type': 'string' })
+                            .text(pluggedInClass)
+                            .up()
+                            .ele('argument', { name: 'functions', 'xsi:type': 'array' });
+                        for (const pluginType of Object.getOwnPropertyNames(plugins[area][virtualType])) {
+                            if (!supportedPluginTypes.includes(pluginType)) {
+                                continue;
+                            }
+                            let pluginTypeFunctions = VirtualTypeArguments.ele('item', { name: pluginType, 'xsi:type': 'array' });
+                            let pluginFunctionIndex = 0;
+                            for (const pluginFunction of plugins[area][virtualType][pluginType]) {
+                                pluginFunctionIndex++;
+                                pluginTypeFunctions.ele('item', { name: pluginFunctionIndex, 'xsi:type': 'string' })
+                                .text(pluginFunction);
+                            }
+                        }
                     }
-                    let pluginTypeFunctions = VirtualTypeArguments.ele('item', { name: pluginType, 'xsi:type': 'array' });
-                    let pluginFunctionIndex = 0;
-                    for (const pluginFunction of plugins[area][virtualType][pluginType]) {
-                        pluginFunctionIndex++;
-                        pluginTypeFunctions.ele('item', { name: pluginFunctionIndex, 'xsi:type': 'string' })
-                        .text(pluginFunction);
+                    // Plugins in correct scope
+                    if (diArea == area) {
+                        xml.ele('type', { name: pluggedInClass })
+                            .ele('plugin', { name: virtualType.replace(/\\/g, '_'), type: virtualType, sortOrder: pluginSortOrder });
+                
                     }
                 }
-                xml.ele('type', { name: pluggedInClass })
-                    .ele('plugin', { name: virtualType.replace(/\\/g, '_'), type: virtualType, sortOrder: pluginSortOrder });
-            }
+            });
+
 
             return xml.toString({ pretty: true });
         }
